@@ -11,8 +11,9 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
-    Route::apiResource('notes', NoteController::class); 
-    Route::get('notes', [NoteController::class, 'index']);
+    Route::post('/createnote', [NoteController::class,'store']); 
+    Route::get('/notes', [NoteController::class,'fetchNotes']);
+    Route::delete('/deletenote/{id}', [NoteController::class,'delete']);
 });
 
 

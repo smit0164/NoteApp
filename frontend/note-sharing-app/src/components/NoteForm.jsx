@@ -1,78 +1,124 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router';
+import { createnote } from '../features/notesSlice';
+const NoteForm = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [titleError, setTitleError] = useState(null);
+  const [content, setContent] = useState('');
+  const [contentError, setContentError] = useState(null);
+  const [isPublic, setIsPublic] = useState(false);
+  const [isPublicError, setIsPublicError] = useState(null);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+ 
+  const handleSubmit =  async(e) => {
+    e.preventDefault();
+    setIsPublicError('');
+    setTitleError('');
+    setIsPublicError('');
+    let hasError = false;
+    if (!title || title.length < 3) {
+       setTitleError('Title must be at least 3 characters long');
+       hasError = true;
+    }
+    if (!content || content.length < 10) {
+      setContentError('Content must be at least 10 characters long');
+      hasError = true;
+    }
+    if(hasError){
+        setIsLoading(false);
+        return;
+    }
+    try{
+        await dispatch(createnote({ title,content,isPublic })).unwrap();
+        navigate('/dashboard')
+    }catch(err){
+        console.log("error",err);
+        setIsLoading(false);
+    }    
+  
+  }
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-lg w-full bg-white shadow-lg rounded-2xl p-8 space-y-8 border border-gray-100">
+        <h2 className="text-xl font-semibold text-gray-800">📝 Create a New Note</h2>
 
+        <form onSubmit={(e) =>handleSubmit(e)} className="space-y-6" method='POST'>
+          {/* Title Field */}
+          <div className="space-y-3">
+            <label htmlFor="title" className="text-sm text-gray-700 font-medium">
+              Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              placeholder="Enter a catchy title"
+              className="w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition border-gray-300"
+              disabled={isLoading}
+              onChange={(e) => {
+                 setTitle(e.target.value)
+                 setTitleError('')
+              }}
+              value={title}
+            />
+            {titleError && <p className="text-red-500 text-sm">{titleError}</p>}
+          </div>
 
-const NoteForm = ({ onSave }) => {
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
-    const [isPublic, setIsPublic] = useState(false);
-    const [error, setError] = useState('');
+          {/* Content Field */}
+          <div className="space-y-3">
+            <label htmlFor="content" className="text-sm text-gray-700 font-medium">
+              Content
+            </label>
+            <textarea
+              id="content"
+              placeholder="Write something meaningful..."
+              className="w-full px-4 py-3 border rounded-lg text-sm resize-none h-32 focus:outline-none focus:ring-2 focus:ring-blue-500 transition border-gray-300"
+              disabled={isLoading}
+              onChange={(e) => 
+                {setContent(e.target.value)
+                setContentError('')}  
+            }
+              value={content}
+            ></textarea>
+            {contentError && <p className="text-red-500 text-sm">{contentError}</p>}
+          </div>
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await api.post('/notes', { title, content, is_public: isPublic });
-            setTitle('');
-            setContent('');
-            setIsPublic(false);
-            onSave();
-        } catch (err) {
-            setError('Failed to create note.');
-            console.error(err);
-        }
-    };
+          {/* Public Checkbox */}
+          <div className="flex items-center space-x-2 mt-3">
+            <input
+              type="checkbox"
+              id="public"
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-400"
+              disabled={isLoading}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              checked={isPublic}
+            />
+            <label htmlFor="public" className="text-sm text-gray-700">
+              Make this note public
+            </label>
+            {isPublicError && <p className="text-red-500 text-sm">{isPublicError}</p>}
+          </div>
 
-    return (
-        <form
-            onSubmit={handleSubmit}
-            className="max-w-md w-full bg-white shadow-md rounded-2xl p-6 space-y-4"
-        >
-            <h3 className="text-lg font-semibold text-gray-800">Create Note</h3>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 disabled:opacity-60 flex justify-center items-center gap-2 mt-6"
+            onClick={() => {
+              setIsLoading(true);
 
-            <div>
-                <label className="block text-sm text-gray-600 mb-1">Title</label>
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter note title"
-                    required
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm text-gray-600 mb-1">Content</label>
-                <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none h-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Write your note..."
-                    required
-                ></textarea>
-            </div>
-
-            <div className="flex items-center">
-                <input
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    id="public"
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                />
-                <label htmlFor="public" className="ml-2 text-sm text-gray-700">
-                    Make Public
-                </label>
-            </div>
-
-            <button
-                type="submit"
-                className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 transition duration-200"
-            >
-                Save Note
-            </button>
+            }}
+          >
+            {isLoading && (
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            )}
+            {isLoading ? 'Saving...' : 'Save Note'}
+          </button>
         </form>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default NoteForm;

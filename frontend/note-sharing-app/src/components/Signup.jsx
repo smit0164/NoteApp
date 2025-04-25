@@ -1,18 +1,25 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signup } from '../features/authSlice';
 import { useNavigate, Link } from 'react-router';
 
 const Signup = () => {
     const dispatch = useDispatch();
-    const { loading, error } = useSelector((state) => state.auth);
+    const { loading } = useSelector((state) => state.auth);
     const [name, setName] = useState('');
+    const [nameError, setNameError] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setEmailError('');
+        setPasswordError('');
+        setNameError('');
+
         try {
             // const a=
             await dispatch(signup({ name, email, password })).unwrap();
@@ -22,7 +29,10 @@ const Signup = () => {
             navigate('/dashboard')
            
         } catch (err) {
-            console.log("error")
+            console.log("error",err.errors)
+            setEmailError(err.errors.email ? err.errors.email[0] : '');
+            setPasswordError(err.errors.password ? err.errors.password[0] : '');
+            setNameError(err.errors.name ? err.errors.name[0] : '');
             console.error(err);
         }
     };
@@ -31,17 +41,6 @@ const Signup = () => {
         <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-green-400 via-blue-500 to-purple-600">
             <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
                 <h2 className="text-3xl font-semibold text-center text-blue-600 mb-6">Create Account</h2>
-                {error?.errors && (
-                <div className="mb-4">
-                    {Object.entries(error.errors).map(([field, messages]) =>
-                        messages.map((msg, i) => (
-                            <p key={`${field}-${i}`} className="text-red-500 text-center">
-                                {msg}
-                            </p>
-                        ))
-                    )}
-                </div>
-                )}
 
 
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -50,30 +49,40 @@ const Signup = () => {
                         <input
                             type="text"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={(e) => {setName(e.target.value)
+                                setNameError('');
+
+                            }}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={loading}
                         />
+                        {nameError && <p className="text-red-500 text-sm">{nameError}</p>}
                     </div>
                     <div>
                         <label className="block text-gray-700 mb-1 font-medium">Email</label>
                         <input
                             type="email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => {setEmail(e.target.value)
+                                setEmailError('');
+                            }}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={loading}
                         />
+                        {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
                     </div>
                     <div>
                         <label className="block text-gray-700 mb-1 font-medium">Password</label>
                         <input
                             type="password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => {setPassword(e.target.value)
+                                setPasswordError('');
+                            }}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={loading}
                         />
+                        {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
                     </div>
                     <button
                         type="submit"

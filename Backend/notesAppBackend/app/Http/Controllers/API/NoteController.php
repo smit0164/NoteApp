@@ -18,7 +18,7 @@ class NoteController extends Controller
             'user_id' => Auth::id(),
             'title' => $request->title,
             'content' => $request->content,
-            'is_public' => $request->is_public ?? false,
+            'is_public' => $request->is_public ? 1 : 0,
         ]);
     
         return response()->json([
@@ -26,10 +26,25 @@ class NoteController extends Controller
             'note' => new NoteResource($note),
         ], 201);
     }
-    public function index()
+
+    public function fetchNotes()
     {
         $notes = Note::where('user_id', Auth::id())->get();
-        return NoteResource::collection($notes);
+        return response()->json([
+            'notes' => NoteResource::collection($notes),
+        ]);
+    }
+
+    public function delete( $id){
+        $user = Auth::user();
+        $note = Note::where('user_id', $user->id)->where('id', $id)->first();
+        if (!$note) {
+            return response()->json(['message' => 'Note not found'], 404);
+        }
+        
+            $note->delete();
+            return response()->json(['message' => 'Note deleted successfully','id'=>$id], 200);
+        
     }
     
 
